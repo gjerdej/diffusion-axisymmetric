@@ -20,7 +20,7 @@ subsection refinement criterion: 0
 end
 
 set time step = 4.0
-set number steps = 500
+set number steps = 300
 
 subsection output
   set condition = EQUAL_SPACING
@@ -28,6 +28,8 @@ subsection output
 end
 
 set Model constant D = 1.0, DOUBLE
+set Model constant c0 = 1.0, DOUBLE
+set Model constant A = 0.1, DOUBLE
 
 subsection linear solver parameters: 0
   set solver_ids               = 0

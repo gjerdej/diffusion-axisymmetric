@@ -29,6 +29,8 @@ public:
   CustomPDE(const UserInputParameters<dim> &_user_inputs, PhaseFieldTools<dim> &_pf_tools)
     : PDEOperatorBase<dim, degree, number>(_user_inputs, _pf_tools)
     , D(get_user_inputs().user_constants.get_double("D"))
+    , c0(get_user_inputs().user_constants.get_double("c0"))
+    , A(get_user_inputs().user_constants.get_double("A"))
   {}
 
 private:
@@ -39,8 +41,7 @@ private:
                         [[maybe_unused]] number                   &scalar_value,
                         [[maybe_unused]] number &vector_component_value) const override
   {
-    const dealii::Tensor<1, dim> &mesh_size =
-      get_user_inputs().spatial_discretization.rectangular_mesh.size;
+    const dealii::Tensor<1, dim> &mesh_size = get_user_inputs().spatial_discretization.rectangular_mesh.size;
 
     if (index == 0)
       {
@@ -53,10 +54,8 @@ private:
 
         const double pi    = std::acos(-1.0);
         const double alpha = 3.831705970207512;
-        const double cb    = 1.0;
-        const double A     = 0.1;
 
-        scalar_value = cb + A * boost::math::cyl_bessel_j(0.0, alpha * r / R) * std::cos(pi * z / H);
+        scalar_value = c0 + A * boost::math::cyl_bessel_j(0.0, alpha * r / R) * std::cos(pi * z / H);
       }
   }
 
@@ -81,8 +80,7 @@ private:
       {
         const auto point = variable_list.get_q_point_location();
 
-        const auto &mesh_size =
-          get_user_inputs().spatial_discretization.rectangular_mesh.size;
+        const auto &mesh_size = get_user_inputs().spatial_discretization.rectangular_mesh.size;
 
         const double R = mesh_size[0];
         const double H = mesh_size[1];
@@ -90,11 +88,8 @@ private:
 
         const double pi    = std::acos(-1.0);
         const double alpha = 3.831705970207512;
-        const double cb    = 1.0;
-        const double A     = 0.1;
 
-        const double k_squared =
-          (alpha / R) * (alpha / R) + (pi / H) * (pi / H);
+        const double k_squared = (alpha / R) * (alpha / R) + (pi / H) * (pi / H);
 
         ScalarValue c_exact;
 
@@ -104,11 +99,8 @@ private:
             const double r = point[0][lane];
             const double z = point[1][lane];
 
-            c_exact[lane] =
-              cb + A
-                    * boost::math::cyl_bessel_j(0.0, alpha * r / R)
-                    * std::cos(pi * z / H)
-                    * std::exp(-D[lane] * k_squared * t);
+            c_exact[lane] = c0 + A * boost::math::cyl_bessel_j(0.0, alpha * r / R)
+                              * std::cos(pi * z / H) * std::exp(-D[lane] * k_squared * t);
           }
 
         variable_list.set_value_term(1, c_exact);
@@ -138,6 +130,8 @@ private:
   }
 
   ScalarValue D;
+  double c0;
+  double A;
 };
 
 PRISMS_PF_END_NAMESPACE
